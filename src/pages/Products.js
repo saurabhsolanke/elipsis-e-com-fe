@@ -10,6 +10,8 @@ const Products = () => {
   const [totalProducts, setTotalProducts] = useState(0);
 
   const [cartItems, setCartItems] = useState([]);
+  const token = localStorage.getItem("token");
+  const userid = localStorage.getItem("userid");
   const addToCart = (product) => {
     setCartItems([...cartItems, product]);
   };
@@ -17,7 +19,7 @@ const Products = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const productsData = await fetchProducts(currentPage, limit);
+        const productsData = await fetchProducts(currentPage, limit, userid, token);
         setProducts(productsData);
         console.log(productsData);
 
@@ -54,10 +56,10 @@ const Products = () => {
   };
   return (
     <div>
-      <div class="flex m-4 w-full items-center justify-center space-x-2 text-sm font-normal text-gray-900 dark:text-gray-200">
-        <div class="text-sky-600 dark:text-sky-400">Admin</div><span>/</span>
-        <div class="text-sky-600 dark:text-sky-400">Products</div><span>/</span>
-        <div class="text-sky-600 dark:text-sky-400">Products Dashboard</div><span>/</span>
+      <div className="flex m-4 w-full items-center justify-center space-x-2 text-sm font-normal text-gray-900 dark:text-gray-200">
+        <div className="text-sky-600 dark:text-sky-400">Admin</div><span>/</span>
+        <div className="text-sky-600 dark:text-sky-400">Products</div><span>/</span>
+        <div className="text-sky-600 dark:text-sky-400">Products Dashboard</div><span>/</span>
       </div>
 
       <div className="flex-1 border">
@@ -74,7 +76,7 @@ const Products = () => {
             </div>
             <div className="bg-white p-4 shadow-xl rounded">
               <h2 className="font-semibold">Total Revenue</h2>
-              <p>$1,200</p>
+              <p>Rs.1,200</p>
             </div>
           </div>
 
@@ -126,7 +128,7 @@ const Products = () => {
                         {product.price}
                       </td>
                       <td className='flex px-6 py-4'>
-                        <Link to={`/editproduct/${product.id}`}>
+                        <Link to={`/editproduct/Rs.{product.id}`}>
                           <img src='/assets/pencil-square.svg' className='text-white' />
                         </Link>
 

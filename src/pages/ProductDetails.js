@@ -46,9 +46,9 @@ const ProductDetails = () => {
   return (
     <div className=''>
       <div className='container'>
-        <a className='' href="/"><svg xmlns="http://www.w3.org/2000/svg" width="46" height="36" fill="grey" class="bi bi-arrow-left" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
-        </svg></a>
+        <a className='' href="/">
+        <img src='/assets/arrow-left.svg'/>
+       </a>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-5 border">
         <div className="col-span-1 lg:col-span-1 flex justify-center items-center bg-gray-100 p-5 rounded-lg border">
@@ -90,7 +90,6 @@ const ProductDetails = () => {
             <p className="text-gray-600 text-base">{product.description}</p>
             <p className="text-sm text-gray-500">Brand: {product.brand}</p>
 
-            {/* New condition for rendering input or label based on user role */}
             {userRole === 'admin' ? (
               <input type="text" value={product.brand} className="text-sm text-gray-500" />
             ) : (

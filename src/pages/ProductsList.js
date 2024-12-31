@@ -51,7 +51,7 @@ const ProductsList = () => {
       <div className="justify-start text-gray-700 dark:text-gray-500 text-3xl">
         <h1 className='m-8'>Products</h1>
       </div>
-      <div className="mx-5 grid gap-x-6 gap-y-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-x-8">
+      <div className="md:mx-5 lg:mx-5 xl:mx-5 grid gap-x-2 gap-y-10 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-x-8">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} images={product.productImages.map(image => image.link)} thumbnail={product.thumbnail} />
         ))}

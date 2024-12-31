@@ -9,7 +9,9 @@ import { useNavigate } from 'react-router-dom';
 const AddProduct = ({ }) => {
     const { productId } = useParams();
     const navigate = useNavigate();
-
+    const userId = localStorage.getItem('userid');
+    const token = localStorage.getItem('token');
+    console.log(userId, "UID", token)
     const notify = () => toast("Added Product!");
     const notify1 = () => toast("Updated Product!");
     const [product, setProduct] = useState({
@@ -29,7 +31,6 @@ const AddProduct = ({ }) => {
         active: true, // Added active
         productImages: [] // This will hold the image objects
     });
-    const userId = localStorage.getItem('userid');
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -63,16 +64,14 @@ const AddProduct = ({ }) => {
         e.preventDefault();
         try {
             if (productId) {
-                const response = await updateProduct({ ...product, userId });
+                const response = await updateProduct( ...product, userId, token );
                 console.log('Product updated successfully:', response);
                 navigate('/admindashboard');
                 notify1();
             } else {
-                const response = await addProduct({ ...product, userId });
+                const response = await addProduct( product, userId, token );
                 console.log('Product added successfully:', response);
-                notify(); // Notify on success
-
-
+                notify();
             }
         } catch (error) {
             console.error('Error adding product:', error);
@@ -81,7 +80,7 @@ const AddProduct = ({ }) => {
 
     return (
         <div className="container mx-16 mt-8">
-            <button className='bg-blue-500 text-white p-2 rounded'><a href='/admindashboard'>  To Dashboard</a></button>
+            <button className='bg-blue-500 text-white p-2 rounded'><a href='/admindashboard/products'>  To Dashboard</a></button>
             <h2 className="font-bold text-3xl mt-5">{productId ? 'Edit Product' : 'Add New Product'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">

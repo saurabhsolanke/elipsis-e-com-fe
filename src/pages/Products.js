@@ -8,6 +8,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [cartItems, setCartItems] = useState([]);
   const token = localStorage.getItem("token");
@@ -34,7 +35,7 @@ const Products = () => {
   }, [currentPage]);
   const handleDeleteProduct = async (productId) => {
     try {
-      await deleteProduct(productId); // Call the defined delete function
+      await deleteProduct(productId, token); // Call the defined delete function
       setProducts(products.filter(product => product.id !== productId));
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -91,6 +92,10 @@ const Products = () => {
             </div>
 
             <div className="relative overflow-x-auto">
+            {/* {isLoading ? (
+                <div>Loading...</div>
+              ) : (
+                <> */}
               <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 shadow-xl">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 
@@ -128,7 +133,7 @@ const Products = () => {
                         {product.price}
                       </td>
                       <td className='flex px-6 py-4'>
-                        <Link to={`/editproduct/Rs.{product.id}`}>
+                        <Link to={`/editproduct/${product.id}`}>
                           <img src='/assets/pencil-square.svg' className='text-white' />
                         </Link>
 
@@ -140,6 +145,8 @@ const Products = () => {
                   ))}
                 </tbody>
               </table>
+              {/* </>
+              // )} */}
             </div>
           </div>
         </div>

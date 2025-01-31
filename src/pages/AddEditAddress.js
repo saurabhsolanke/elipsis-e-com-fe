@@ -55,7 +55,7 @@ const AddEditAddress = () => {
             }
     
             if (addressId) {
-                const response = await updateAddress({ ...address,userid, token });
+                const response = await updateAddress({ ...address}, userid, token );
                 console.log('Address updated successfully:', response);
                 navigate('/profile');
                 notify1();

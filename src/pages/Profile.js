@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getProfile, deleteAddress, editToprofile } from '../api';
+import { getProfile, deleteAddress, editToprofile, updateAddress, setDefaultAddress } from '../api';
 import { ToastContainer, toast } from 'react-toastify';
 import { Navigate, useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ const Profile = () => {
     const notify = () => toast("Added Product!");
     const notify1 = () => toast("Updated Product!");
     const [profile, setProfile] = useState([]);
+    const [order, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const token = localStorage.getItem('token');
@@ -43,9 +44,10 @@ const Profile = () => {
             try {
                 const response = await getProfile(userid, token);
                 setProfile(response.data);
+                setOrders(response.data.orders);
                 console.log(response.data);
             } catch (err) {
-                setError('Failed to fetch cart items');
+                setError('Failed to fetch profile');
             } finally {
                 setLoading(false);
             }
@@ -60,6 +62,32 @@ const Profile = () => {
             notify();
         } catch (err) {
             setError('Failed to remove item from cart');
+        }
+    };
+
+    const handleSetDefaultAddress = async (addressId) => {
+        try {
+            const response = await setDefaultAddress(addressId, userid, token);
+            if (response) {
+                // Immediate state update for better UX
+                setProfile(prev => ({
+                    ...prev,
+                    addresses: prev.addresses.map(addr => ({
+                        ...addr,
+                        isDefault: addr._id === addressId
+                    }))
+                }));
+                localStorage.setItem('defaultAddressId', addressId);
+                
+                // Fetch fresh data from server
+                const updatedProfile = await getProfile(userid, token);
+                setProfile(updatedProfile.data);
+                
+                toast.success("Default address updated successfully!");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to set default address");
         }
     };
 
@@ -162,8 +190,15 @@ const Profile = () => {
                                                             <p>{addr.phoneNumber}</p>
                                                         </div>
                                                         <div className="mt-6 flex items-center justify-between space-x-2">
-                                                            <div>
+                                                            <div className="space-x-2">
                                                                 <a href={`/addeditaddress/${addr._id}`} className="rounded-md bg-gray-700 px-5 py-2 text-sm font-medium text-gray-100">Edit</a>
+                                                                {!addr.isDefault && (
+                                                                    <button
+                                                                    onClick={() => handleSetDefaultAddress(addr._id)}
+                                                                        className="rounded-md bg-cyan-600 px-5 py-2 text-sm font-medium text-gray-100">
+                                                                        Set as Default
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                             <a onClick={() => removeAddress(addr._id)} className="text-sm text-sky-500">Delete</a>
                                                         </div>
@@ -201,7 +236,7 @@ const Profile = () => {
                             </button>
                             <div className={`overflow-hidden transition-[max-height] duration-300 ${isOrdersOpen2 ? 'max-h-40' : 'max-h-0'}`}>
                                 <div className="p-4 bg-white text-gray-600">
-                                    <p>Your orders will be displayed here.</p>
+                                    <p>Your returns will be displayed here.</p>
                                 </div>
                             </div>
                         </div>
@@ -269,35 +304,121 @@ const Profile = () => {
                         </div>
                     )}
 
-
-
                     <div className="my-6">
-                        <button
-                            // onClick={() => setIsOrdersOpen(!isOrdersOpen)} 
-                            className="w-full text-left bg-gray-200 p-4 rounded-md focus:outline-none"
-                        >
-                            <h2 className="text-lg font-semibold">Orders</h2>
-                        </button>
-                        {/* {isOrdersOpen && ( */}
-                        <div className="bg-gray-100 p-4 rounded-md mt-2">
-                            {/* {orders.length > 0 ? ( */}
-                            {/* orders.map(order => ( */}
-                            <div className="border-b py-2">
-                                <p><strong>Item:</strong> </p>
-                                <p><strong>Date:</strong> </p>
-                                <p><strong>Status:</strong></p>
-                            </div>
-                            {/* )) */}
-                            {/* ) : ( */}
-                            <p>No orders found.</p>
-                            {/* )} */}
+                        <div className='flex'>
+                            <button
+                                // onClick={() => setIsOrdersOpen(!isOrdersOpen)} 
+                                className="w-full text-left bg-gray-200 p-4 rounded-md focus:outline-none">
+                                <h2 className="text-lg font-semibold">Orders</h2>
+                            </button>
                         </div>
-                        {/* )} */}
+                        <div className="p-4 bg-white text-gray-600">
+                            <div className="border rounded-lg shadow-md p-4 mb-4 justify-center grid gap-x-2 gap-y-10 grid-cols-1">
+                                {order.map((ordr) => (
+                                    <div key={ordr._id} className="hover:shadow-3xl group  flex h-full w-3/4 mr-4 flex-col space-y-2 overflow-hidden rounded-xl bg-white shadow-lg">
+                                        <div className="flex w-full justify-between border px-3 py-3">
+                                            <div className='row flex w-full'>
+                                                <p className='text-xs'> Status:</p>
+                                                <p className='text-xs'>Payment Method:</p>
+                                                <p className='text-xs'>Ordered At:</p>
+                                                <p className='text-xs'>Total:</p>
+                                            </div>
+                                            <div className='row flex'>
+                                                <p className='text-sm font-semibold tracking-tight'> {ordr.status} </p>
+                                                <p className='text-sm font-semibold tracking-tight'> {ordr.paymentMethod}</p>
+                                                <p className='text-sm font-semibold tracking-tight'>{new Date(ordr.orderedAt).toLocaleString().slice(0, 10)}</p>
+                                                <p className='text-sm font-semibold tracking-tight'>₹{ordr.totalAmount}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex h-full w-full flex-col items-center overflow-hidden rounded-xl">
+                                            <div className="mt-4 flex items-center justify-center space-x-2">
+                                                {ordr.orderItems && ordr.orderItems.length > 0 ? (
+                                                    <div>
+                                                        {ordr.orderItems.map((items) => (
+                                                            <div key={items._id} className="mt-2 p-2 border rounded bg-gray-100">
+                                                                <p>{items.name}</p>
+                                                                <p>{items.price}</p>
+                                                                <p>{items.quantity}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p>No items found for this order.</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex w-full justify-center py-3 font-semibold tracking-tight text-gray-100"></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className=''>
+
+                        </div>
                     </div>
                 </div>
             ) : (
-                <p>empty</p>
-            )}
+                <div className="m-4 md:m-16">
+                    <div className="max-w-2xl mx-auto">
+                        <h2 className="text-2xl font-bold mb-6">Create Profile</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4 mb-12">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={editData.name}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Gender</label>
+                                <select
+                                    name="gender"
+                                    value={editData.gender}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500"
+                                    required
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Mobile</label>
+                                <input
+                                    type="tel"
+                                    name="mobile"
+                                    value={editData.mobile}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                <input
+                                    type="date"
+                                    name="dateOfBirth"
+                                    value={editData.dateOfBirth}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full bg-sky-500 text-white py-2 px-4 rounded-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                            >
+                                Create Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>)}
         </div>
     )
 }

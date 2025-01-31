@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/main/';
+// const API_URL = 'http://localhost:3000/main/';
+const API_URL = 'http://64.23.179.100:3000/main/';
 
 export const loginUser = async (email, password) => {
   try {
@@ -12,9 +13,9 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const registerUser = async (email, password) => {
+export const registerUser = async (userData) => {
   try {
-    const response = await axios.post(`${API_URL}register`, { email, password });
+    const response = await axios.post(`${API_URL}auth/register`, userData);
     return response.data;
   } catch (error) {
     console.error('Error registering user', error);
@@ -23,10 +24,11 @@ export const registerUser = async (email, password) => {
 };
 
 // Products
+// ?sortBy=name:asc&limit=10&page=1
 
 export const fetchProducts = async (currentPage, limit, userid, token) => {
   try {
-    const response = await axios.get(`${API_URL}products/getAllProducts/`, {
+    const response = await axios.get(`${API_URL}products/getAllProducts/${userid}?page=${currentPage}&limit=${limit}`, {
       headers: { Authorization: `Bearer ${token}` }, userid,
       // Uncomment and use params if needed
       // params: { limit, skip: (currentPage - 1) * limit },
@@ -38,9 +40,11 @@ export const fetchProducts = async (currentPage, limit, userid, token) => {
   }
 };
 
-export const fetchProductById = async (productId) => {
+export const fetchProductById = async (productId, token) => {
   try {
-    const response = await axios.get(`${API_URL}products/${productId}`);
+    const response = await axios.get(`${API_URL}products/${productId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -48,12 +52,12 @@ export const fetchProductById = async (productId) => {
   }
 };
 
-export const updateProduct = async (productData, token) => {
+export const updateProduct = async (productData, userid, token) => {
   try {
     const { id, ...data } = productData;
-    const response = await axios.patch(`${API_URL}products/${id}`, data, {
+    const response = await axios.patch(`${API_URL}products/${userid}`, data, {
       headers: { Authorization: `Bearer ${token}` }
-    })
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating product:', error);
@@ -61,10 +65,12 @@ export const updateProduct = async (productData, token) => {
   }
 };
 
-export const deleteProduct = async (productId) => {
+export const deleteProduct = async (productId, token) => {
   try {
-    const response = await axios.delete(`${API_URL}/products/${productId}`);
-    return response.data; // Return confirmation of deletion
+    const response = await axios.delete(`${API_URL}products/${productId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   } catch (error) {
     console.error('Error deleting product:', error);
     throw error;
@@ -97,18 +103,6 @@ export const addToCartproduct = async (payload, token, userid) => {
   }
 };
 
-export const getAllCartItems = async (token, userid) => {
-  try {
-    const response = await axios.get(`${API_URL}cart/getAllCarts/${userid}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching cart items', error);
-    throw error;
-  }
-};
-
 export const updateCartItemQuantity = async (payload, cartItemId, token) => {
   try {
     const response = await axios.patch(`${API_URL}cart/${cartItemId}`, payload, {
@@ -117,6 +111,18 @@ export const updateCartItemQuantity = async (payload, cartItemId, token) => {
     return response.data;
   } catch (error) {
     console.error('Error updating product:', error);
+    throw error;
+  }
+};
+
+export const getAllCartItems = async (userid, token) => {
+  try {
+    const response = await axios.get(`${API_URL}cart/getAllCarts/${userid}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching cart items', error);
     throw error;
   }
 };
@@ -250,6 +256,21 @@ export const addAddress = async (address, userid, token) => {
   }
 };
 
+export const setDefaultAddress = async (addressId, userid, token) => {
+  try {
+    const response = await axios.patch(`${API_URL}profile/update-default-address/${userid}`, {
+      addressId: addressId,
+      isDefault: true
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error setting default address:', error);
+    throw error;
+  }
+};
+
 export const updateAddress = async (address, userid, token) => {
   try {
     const { id, ...data } = address;
@@ -285,6 +306,41 @@ export const addOrder = async (order, userid, token) => {
     return response.data;
   } catch (error) {
     console.error('Error adding Order:', error); // Updated error message for clarity
+    throw error;
+  }
+};
+
+export const updateProductSizes = async (productId, sizes, token) => {
+  try {
+    const response = await axios.patch(`${API_URL}products/updateSizes/${productId}`, { sizes }, {
+      headers: {
+        'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'
+      }
+    }
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const uploadImage = async (file, token) => {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await axios.post(
+      `${API_URL}img-upload/uploads`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return response.data; // Should return the image URL
+  } catch (error) {
     throw error;
   }
 };

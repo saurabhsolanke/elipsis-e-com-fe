@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { addToCartproduct, getAllWishlist, addToWishlistproduct, deleteWishlistItem } from '../api';
+import { addToCartproduct, getAllWishlist, addToWishlistproduct, deleteWishlistItem, updateCartItemQuantity, fetchProducts } from '../api';
 import { ToastContainer, toast } from 'react-toastify';
 
 
-const ProductCard = ({ product, images, addToCart }) => {
+const ProductCard = ({ product, images, addToCart, loadProducts }) => {
   const token = localStorage.getItem('token');
   const userid = localStorage.getItem('userid');
   const [wishlists, setWishlist] = useState([]);
+  const productId = product?.id || product._id;
 
   const notify = () => toast("Added to cart!");
-  const notify1 = () => toast("Item Already in cart!");
-  const notify2 = () => toast("Item Already in Wishlist!");
+  const notify1 = () => toast("removed item from wishlist");
+  const notify2 = () => toast("Item deleted in Wishlist!");
   const notify3 = () => toast("Added to wishlist!");
   const notify4 = () => toast("Error adding to wishlist!");
 
@@ -32,17 +33,20 @@ const ProductCard = ({ product, images, addToCart }) => {
     // loadWishlist();
   })
 
-  const handleHeartClick = async (item) => {
+  const handleHeartClick = async () => {
+    const isWishlisted = product?.isWishlisted || false;
     setIsHeartClicked(!isHeartClicked);
     const payload = {
-      productId: product.id,
+      productId: productId,
     };
+    console.log(payload);
 
     try {
-      if (!isHeartClicked) {
+      if (!isWishlisted) {
         const response = await addToWishlistproduct(payload, token, userid);
         if (response) {
-          console.log(response);
+          console.log(response.wishlist.id);
+          await loadProducts();
           notify3();
         } else {
           const errorData = await response.text();
@@ -50,9 +54,11 @@ const ProductCard = ({ product, images, addToCart }) => {
           console.error('Error adding to wishlist:', errorData);
         }
       } else {
-        const response = await deleteWishlistItem(payload.productId, token);
+        const response = await deleteWishlistItem(product.wishlistId, token);
         if (response) {
+          product.isWishlisted = !product.isWishlisted;
           notify1();
+          await loadProducts();
         } else {
           const errorData = await response.text();
           console.error('Error removing from wishlist:', errorData);
@@ -62,26 +68,42 @@ const ProductCard = ({ product, images, addToCart }) => {
       notify4();
       console.error('Error handling wishlist:', error);
     }
+    finally {
+
+    }
   };
 
   const handleAddToCart = async () => {
     const payload = {
-      productId: product.id,
+      productId: productId,
       quantity: 1,
     };
-    console.log('Payload:', payload);
-    console.log('Token', token);
+    console.log(payload);
     try {
       const response = await addToCartproduct(payload, token, userid);
       console.log('Response:', response);
-      if (!response.ok) {
-        notify();
-        const errorData = await response.text();
-        console.error('Error details:', errorData);
-        throw new Error('Network response was not ok');
+
+      if (response && response.status !== 'error') {
+        notify(); // Show success notification
+      } else if (response && response.message === 'Product already exists in cart') {
+        // If product exists, try to update its quantity
+        try {
+          const updatePayload = {
+            quantity: payload.quantity + 1 // Increment existing quantity by 1
+          };
+          const updateResponse = await updateCartItemQuantity(updatePayload, response.cartItemId, token);
+          if (updateResponse) {
+            notify(); // Show success notification for quantity update
+          } else {
+            notify1(); // Show error notification
+          }
+        } catch (updateError) {
+          console.error('Error updating cart quantity:', updateError);
+          notify1();
+        }
+      } else {
+        notify1(); // Show "Item already in cart" notification
       }
-      const data = await response.text();
-      console.log('Product added to cart:', data);
     }
     catch (error) {
       console.error('Error adding product to cart:', error);
@@ -90,8 +112,9 @@ const ProductCard = ({ product, images, addToCart }) => {
   };
 
   return (
-    <div className="product-card shadow-2xl rounded-xl p-5">
-      <Link to={`/products/${product.id}`}>
+    <div className="product-card shadow rounded-xl">
+       <div className="relative">
+      <Link to={`/products/${productId}`}>
         <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7" style={{ height: '300px' }}>
           {images.length > 0 ? (
             <img key={0} src={images[0]} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
@@ -100,19 +123,22 @@ const ProductCard = ({ product, images, addToCart }) => {
           )}
         </div>
       </Link>
-      <h3 className="mt-4 text-md text-gray-700">{product.brand}</h3>
-      <h3 className="mt-4 text-sm text-gray-700">{product.name}</h3>
-      <p className="mt-1 text-sm font-medium text-gray-900">{product.description}</p>
-      <p className="mt-1 text-lg font-medium text-gray-900">Rs.{product.price}</p>
-      <div className='flex justify-between'>
-        <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          onClick={handleAddToCart}>
-          <ToastContainer />
-          <img src='/assets/cart.svg'/>
-        </button>
-        <button className='' onClick={handleHeartClick}>
-          <img src={isHeartClicked ? '/assets/heart-fill.svg' : '/assets/heart.svg'} alt="Heart Icon" />
-        </button>
+      <button className='absolute top-2 right-2 p-2' onClick={handleHeartClick}>
+            <img  className="w-5 h-5"  src={product?.isWishlisted ? '/assets/heart-fill.svg' : '/assets/heart.svg'} alt="Heart Icon" />
+          </button>
+      </div>
+      <div className='px-5 py-3'>
+        {/* <h3 className="text-md text-gray-700">{product.brand}</h3> */}
+        <h3 className="text-sm text-gray-700">{product.name}</h3>
+        {/* <p className="text-sm font-medium text-gray-900">{product.description}</p> */}
+        <p className="text-lg font-medium text-gray-900">Rs.{product.price}</p>
+        <div className='flex justify-between'>
+          {/* <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            onClick={handleAddToCart}>
+            <ToastContainer />
+            <img src='/assets/cart.svg' />
+          </button> */}
+        </div>
       </div>
     </div>
   );

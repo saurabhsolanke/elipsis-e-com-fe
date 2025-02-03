@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// const API_URL = 'http://localhost:3000/main/';
-const API_URL = 'http://64.23.179.100:3000/main/';
+const API_URL = "https://backend.ellipses.co.in/api/ellipses/main/";
+
+// const API_URL = process.env.REACT_APP_PRODUCTION_API_URL;
 
 export const loginUser = async (email, password) => {
   try {
@@ -21,6 +22,13 @@ export const registerUser = async (userData) => {
     console.error('Error registering user', error);
     throw error;
   }
+};
+
+export const checkToken = (token) => {
+  // Implement your token expiration logic here
+  // For example, decode the token and check the expiration date
+  // If expired, return false
+  return true; // Placeholder
 };
 
 // Products

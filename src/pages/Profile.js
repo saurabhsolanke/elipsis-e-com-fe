@@ -9,6 +9,7 @@ const Profile = () => {
     const navigate = useNavigate();
     const notify = () => toast("Added Product!");
     const notify1 = () => toast("Updated Product!");
+    const notify2 = () => toast("Address NotFound!, Add Address");
     const [profile, setProfile] = useState([]);
     const [order, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,20 +40,30 @@ const Profile = () => {
         phoneNumber: "",
     })
 
-    useEffect(() => {
-        const fetchprofile = async () => {
-            try {
-                const response = await getProfile(userid, token);
-                setProfile(response.data);
-                setOrders(response.data.orders);
-                console.log(response.data);
-            } catch (err) {
-                setError('Failed to fetch profile');
-            } finally {
-                setLoading(false);
+    const fetchprofile = async () => { // Define fetchprofile function here
+        try {
+            const response = await getProfile(userid, token);
+            setProfile(response.data);
+            console.log("profile", response.data);
+            setOrders(response.data.orders);
+            console.log(response.data.addresses);
+
+            if (response.data.addresses.length === 0) {
+                console.log("heyyyy", response.data.addresses);
+                notify2();
+            } else if (response.data.addresses.length === 1 && !response.data.addresses[0].isDefault) {
+                // Trigger handleSetDefaultAddress if there's only one address and it's not default
+                await handleSetDefaultAddress(response.data.addresses[0]._id);
             }
-        };
-        fetchprofile();
+        } catch (err) {
+            setError('Failed to fetch profile');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchprofile(); // Call fetchprofile here
     }, [token]);
 
     const removeAddress = async (id) => {
@@ -60,6 +71,7 @@ const Profile = () => {
             await deleteAddress(id, token);
             setAddress(address.filter(item => item.id !== id));
             notify();
+            fetchprofile();
         } catch (err) {
             setError('Failed to remove item from cart');
         }
@@ -78,11 +90,11 @@ const Profile = () => {
                     }))
                 }));
                 localStorage.setItem('defaultAddressId', addressId);
-                
+
                 // Fetch fresh data from server
                 const updatedProfile = await getProfile(userid, token);
                 setProfile(updatedProfile.data);
-                
+
                 toast.success("Default address updated successfully!");
             }
         } catch (err) {
@@ -146,18 +158,18 @@ const Profile = () => {
                     <div className='w-full md:w-1/2'>
                         <figure className="flex flex-col md:flex-row bg-slate-100 rounded-xl p-4 md:p-8">
                             <img className="w-24 h-24 md:w-48 md:h-auto md:rounded-none rounded-full mx-auto" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="" width="384" height="512" />
-                            <div className="pt-4 md:pt-6 md:p-8 text-center md:text-left space-y-4"> {profile.userId}
+                            <div className="pt-4 md:pt-6 md:p-8 text-center md:text-left space-y-4"> {profile._id}
                                 <blockquote>
-                                    <p className="text-lg font-medium"> Name: {profile.name} </p>
-                                    <p className="text-lg font-medium">Gender: {profile.gender}</p>
-                                    <p className="text-lg font-medium">Mobile: {profile.mobile}</p>
+                                    <p className="text-lg font-medium"> Name: {profile.userId.name} </p>
+                                    <p className="text-lg font-medium">Gender: {profile.userId.gender}</p>
+                                    <p className="text-lg font-medium">Mobile: {profile.userId.mobile}</p>
                                     <p className="text-lg font-medium"> Date of Birth {profile.dateOfBirth.slice(0, 10)}</p>
                                     <button onClick={handleEditClick} className="text-sm text-sky-500">Edit</button>
                                 </blockquote>
                             </div>
                         </figure>
                     </div>
-
+                    <ToastContainer />
                     <div className="mx-auto my-8">
                         <div className="border-b border-gray-200 last:border-none">
                             <button onClick={toggleOrdersAccordion} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 text-left">
@@ -194,7 +206,7 @@ const Profile = () => {
                                                                 <a href={`/addeditaddress/${addr._id}`} className="rounded-md bg-gray-700 px-5 py-2 text-sm font-medium text-gray-100">Edit</a>
                                                                 {!addr.isDefault && (
                                                                     <button
-                                                                    onClick={() => handleSetDefaultAddress(addr._id)}
+                                                                        onClick={() => handleSetDefaultAddress(addr._id)}
                                                                         className="rounded-md bg-cyan-600 px-5 py-2 text-sm font-medium text-gray-100">
                                                                         Set as Default
                                                                     </button>
@@ -213,7 +225,7 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div className="border-b border-gray-200 last:border-none">
+                        {/* <div className="border-b border-gray-200 last:border-none">
                             <button onClick={toggleOrdersAccordion1} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 text-left">
                                 <span className="font-medium text-gray-700">Orders</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-transform duration-300 ${isOrdersOpen1 ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -239,62 +251,33 @@ const Profile = () => {
                                     <p>Your returns will be displayed here.</p>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {isModalOpen && (
                         <div className="modal">
                             <div className="modal-content relative">
-                                <span
-                                    className="close"
-                                    onClick={() => setIsModalOpen(false)}
-                                >
-                                    &times;
-                                </span>
+                                <span className="close" onClick={() => setIsModalOpen(false)} >&times; </span>
                                 <form onSubmit={handleSubmit}>
                                     <label className="block mb-2">
-                                        Name:
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={editData.name}
-                                            onChange={handleInputChange}
-                                            className="border p-2 rounded w-full"
-                                        />
+                                        Name:  <input type="text" name="name" value={editData.name} onChange={handleInputChange} className="border p-2 rounded w-full" />
                                     </label>
                                     <label>
                                         Gender:
-                                        <select
-                                            name="gender"
-                                            value={editData.gender}
-                                            onChange={handleInputChange}
-                                            className="border p-2 rounded w-full">
+                                        <select name="gender" value={editData.gender} onChange={handleInputChange} className="border p-2 rounded w-full">
                                             <option value="">Select Gender</option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                             <option value="Other">Other</option>
                                         </select>
                                     </label>
-
                                     <label className="block mb-2">
                                         Mobile:
-                                        <input
-                                            type="text"
-                                            name="mobile"
-                                            value={editData.mobile}
-                                            onChange={handleInputChange}
-                                            className="border p-2 rounded w-full"
-                                        />
+                                        <input type="text" name="mobile" value={editData.mobile} onChange={handleInputChange} className="border p-2 rounded w-full" />
                                     </label>
                                     <label className="block mb-2">
                                         Date of Birth:
-                                        <input
-                                            type="date"
-                                            name="dateOfBirth"
-                                            value={editData.dateOfBirth}
-                                            onChange={handleInputChange}
-                                            className="border p-2 rounded w-full"
-                                        />
+                                        <input type="date" name="dateOfBirth" value={editData.dateOfBirth} onChange={handleInputChange} className="border p-2 rounded w-full" />
                                     </label>
                                     <button type="submit" className="bg-sky-500 text-white px-4 py-2 rounded mt-4">
                                         Save

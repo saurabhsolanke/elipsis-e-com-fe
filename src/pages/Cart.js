@@ -15,7 +15,7 @@ const Cart = () => {
   const notify = () => toast("Item removed from cart!"); // Define the notify function
   const notify1 = () => toast("Failed to place the order. Please try again later"); // Define the notify function
   const notify2 = () => toast("Order Placed!"); // Define the notify function
-  const notify3 = () => toast("Error!"); // Define the notify function
+  const notify3 = () => toast("No address found, add address from profile!"); // Define the notify function
   const [isHeartClicked, setIsHeartClicked] = useState(false); // Add state to track heart click
   const [addressid, setAddressId] = useState(null); // Declare addressid as state
   const defaultAddressId = localStorage.getItem('defaultAddressId');
@@ -157,13 +157,18 @@ const Cart = () => {
         notify2();
         navigate('/checkout');
       } else {
+        console.error("else", error);
         notify1(); // Show error notification
         throw new Error('Invalid response format');
       }
     }
     catch (error) {
-      console.error('Error adding product to Orders:', error);
-      notify1(); // Show error notification
+      console.error('Error adding product to Orders:', error.response.data.message);
+      if (error.response.data.message == "\"shippingAddress\" must be a string") {
+        notify3();
+      } else {
+        notify1(); // Show error notification
+      }
     }
   };
 

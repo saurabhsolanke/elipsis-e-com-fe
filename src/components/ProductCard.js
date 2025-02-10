@@ -112,20 +112,20 @@ const ProductCard = ({ product, images, addToCart, loadProducts }) => {
   };
 
   return (
-    <div className="product-card shadow rounded-xl">
-       <div className="relative">
-      <Link to={`/products/${productId}`}>
-        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7" style={{ height: '300px' }}>
-          {images.length > 0 ? (
-            <img key={0} src={images[0]} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
-          ) : (
-            <img src={product.thumbnail} alt="Thumbnail" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
-          )}
-        </div>
-      </Link>
-      <button className='absolute top-2 right-2 p-2' onClick={handleHeartClick}>
-            <img  className="w-5 h-5"  src={product?.isWishlisted ? '/assets/heart-fill.svg' : '/assets/heart.svg'} alt="Heart Icon" />
-          </button>
+    <div className="product-card shadow rounded-xl transition-transform duration-300 hover:shadow-lg hover:scale-105">
+      <div className="relative">
+        <Link to={`/products/${productId}`}>
+          <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7" style={{ height: '300px' }} >
+            {images.length > 0 ? (
+              <img key={0} src={images[0]} data-aos="fade-up" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+            ) : (
+              <img src={product.thumbnail} data-aos="fade-up" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+            )}
+          </div>
+        </Link>
+        <button className='absolute top-2 right-2 p-2' onClick={handleHeartClick}>
+          <img className="w-5 h-5" src={product?.isWishlisted ? '/assets/heart-fill.svg' : '/assets/heart.svg'} alt="Heart Icon" />
+        </button>
       </div>
       <div className='px-5 py-3'>
         {/* <h3 className="text-md text-gray-700">{product.brand}</h3> */}
@@ -134,10 +134,10 @@ const ProductCard = ({ product, images, addToCart, loadProducts }) => {
         <p className="text-lg font-medium text-gray-900">Rs.{product.price}</p>
         <div className='flex justify-between'>
           {/* <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-            onClick={handleAddToCart}>
-            <ToastContainer />
-            <img src='/assets/cart.svg' />
-          </button> */}
+         onClick={handleAddToCart}>
+         <ToastContainer />
+         <img src='/assets/cart.svg' />
+       </button> */}
         </div>
       </div>
     </div>

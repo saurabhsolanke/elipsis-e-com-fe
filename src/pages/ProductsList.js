@@ -3,6 +3,7 @@ import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 import Pagination from '../components/Pagination';
 import { fetchProducts, getAllWishlist, } from '../api';
+import Carousel from '../components/Carousel';
 import Cart from './Cart';
 
 const limit = 10;
@@ -56,6 +57,7 @@ const ProductsList = () => {
         </div>
       ) : (
         <>
+          <Carousel />
           <div className="justify-start text-gray-700 dark:text-gray-500 text-3xl">
             <h1 className='mx-8 my-3'>Products</h1>
           </div>

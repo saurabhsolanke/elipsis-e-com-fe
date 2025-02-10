@@ -38,7 +38,7 @@ const Login = () => {
   return (
     <div className='h-full'>
       <section className="bg-gray-50 h-screen">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0 bg-white">
+        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0 bg-white">
           <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-black">
             {/* <img className="w-8 h-8 mr-2" src="" alt="logo" /> */}
             Ellipses Clothing and Fashion

@@ -40,30 +40,29 @@ const Profile = () => {
         phoneNumber: "",
     })
 
-    const fetchprofile = async () => { // Define fetchprofile function here
-        try {
-            const response = await getProfile(userid, token);
-            setProfile(response.data);
-            console.log("profile", response.data);
-            setOrders(response.data.orders);
-            console.log(response.data.addresses);
-
-            if (response.data.addresses.length === 0) {
-                console.log("heyyyy", response.data.addresses);
-                notify2();
-            } else if (response.data.addresses.length === 1 && !response.data.addresses[0].isDefault) {
-                // Trigger handleSetDefaultAddress if there's only one address and it's not default
-                await handleSetDefaultAddress(response.data.addresses[0]._id);
-            }
-        } catch (err) {
-            setError('Failed to fetch profile');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchprofile(); // Call fetchprofile here
+        const fetchprofile = async () => {
+            try {
+                const response = await getProfile(userid, token);
+                setProfile(response.data);
+                console.log("profile", response.data);
+                setOrders(response.data.orders);
+                console.log(response.data.addresses);
+
+                if (response.data.addresses.length === 0) {
+                    console.log("heyyyy", response.data.addresses);
+                    notify2();
+                } else if (response.data.addresses.length === 1 && !response.data.addresses[0].isDefault) {
+                    // Trigger handleSetDefaultAddress if there's only one address and it's not default
+                    await handleSetDefaultAddress(response.data.addresses[0]._id);
+                }
+            } catch (err) {
+                setError('Failed to fetch profile');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchprofile();
     }, [token]);
 
     const removeAddress = async (id) => {
@@ -71,7 +70,6 @@ const Profile = () => {
             await deleteAddress(id, token);
             setAddress(address.filter(item => item.id !== id));
             notify();
-            fetchprofile();
         } catch (err) {
             setError('Failed to remove item from cart');
         }
